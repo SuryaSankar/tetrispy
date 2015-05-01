@@ -1,4 +1,6 @@
 from random import randint
+import sys
+import select
 
 BRICK = "x"
 SPACE = " "
@@ -95,7 +97,6 @@ def move_right(board, block):
         board.place(block, block.top, block.left+1)
     else:
         board.place(block, block.top, block.left)
-        print "cannot move"
 
 
 def move_left(board, block):
@@ -104,7 +105,6 @@ def move_left(board, block):
         board.place(block, block.top, block.left-1)
     else:
         board.place(block, block.top, block.left)
-        print "cannot move"
 
 
 def rotate_clockwise(board, block):
@@ -115,7 +115,6 @@ def rotate_clockwise(board, block):
     else:
         block.rotate_counter_clockwise()
         board.place(block, block.top, block.left)
-        print "cannot rotate"
 
 
 def rotate_counter_clockwise(board, block):
@@ -126,7 +125,6 @@ def rotate_counter_clockwise(board, block):
     else:
         block.rotate_clockwise()
         board.place(block, block.top, block.left)
-        print "cannot rotate"
 
 
 def move_down(board, block):
@@ -143,13 +141,30 @@ def place_on_top(board, block):
     left = randint(1, board.width-block.width)
     if board.can_fit(block, top, left):
         board.place(block, top, left)
-    else:
-        print "cannot place"
 
+
+def timed_input(n):
+    rlist, _, __ = select.select([sys.stdin], [], [], n)
+    if rlist:
+        x = sys.stdin.readline().strip()
+        return x
+    else:
+        return None
 
 if __name__ == '__main__':
     h = raw_input("Enter board height [30]: ")
     w = raw_input("Enter board width [40]: ")
+    prompt = """
+        Enter
+        a followed by Enter for moving left,
+        d followed by Enter for moving right,
+        w followed by Enter for clockwise,
+        s followed by Enter for anticlockwise
+        and just Enter for staying in same column.
+        You will get 1 seconds to think. Press any key when you
+        are ready to start
+        """
+    raw_input(prompt)
     if h == '':
         h = 30
     else:
@@ -162,21 +177,21 @@ if __name__ == '__main__':
     block = TBlock(height=randint(2, 4), width=randint(2, 4))
     place_on_top(board, block)
     print board
-    x = raw_input('Enter a for moving left, d for moving right, w for clockwise, s for anticlockwise and any other for staying in same column: ')
+    x = timed_input(1)
     while x != 'EOF':
         try:
             move_down(board, block)
         except:
-            print "cannot move down"
             block = TBlock(height=randint(2, 4), width=randint(2, 4))
             place_on_top(board, block)
-        if x == 'a':
-            move_left(board, block)
-        elif x == 'd':
-            move_right(board, block)
-        elif x == 'w':
-            rotate_clockwise(board, block)
-        elif x == 's':
-            rotate_counter_clockwise(board, block)
+        if x is not None:
+            if x == 'a':
+                move_left(board, block)
+            elif x == 'd':
+                move_right(board, block)
+            elif x == 'w':
+                rotate_clockwise(board, block)
+            elif x == 's':
+                rotate_counter_clockwise(board, block)
         print board
-        x = raw_input('Enter a for moving left, d for moving right, w for clockwise, s for anticlockwise and any other for staying in same column: ')
+        x = timed_input(1)
