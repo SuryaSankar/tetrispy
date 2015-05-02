@@ -1,14 +1,21 @@
 from random import randint
 import sys
 import select
+import math
 
-BRICK = "x"
+BRICK = "#"
 SPACE = " "
 NEWLINE = "\n"
+LEVEL = 1
 
 
 def concatenate(generator):
     return ''.join(list(generator))
+
+
+def percentage(numerator, denominator):
+    value = float(numerator)*100/float(denominator)
+    return math.ceil(value*100)/100
 
 
 def transpose(matrix):
@@ -90,6 +97,17 @@ class Board(object):
         block.top = y
         block.left = x
 
+    @property
+    def filled_percentage(self):
+        filled = 0
+        total = 0
+        for row in self.matrix[:-1]:
+            for cell in row[1:-1]:
+                if cell > 0:
+                    filled += 1
+                total += 1
+        return percentage(filled, total)
+
 
 def move_right(board, block):
     board.remove(block, block.top, block.left)
@@ -141,6 +159,8 @@ def place_on_top(board, block):
     left = randint(1, board.width-block.width)
     if board.can_fit(block, top, left):
         board.place(block, top, left)
+    else:
+        raise Exception
 
 
 def timed_input(n):
@@ -152,19 +172,14 @@ def timed_input(n):
         return None
 
 if __name__ == '__main__':
+    l = raw_input("Enter Level [1]: ")
     h = raw_input("Enter board height [30]: ")
     w = raw_input("Enter board width [40]: ")
-    prompt = """
-        Enter
-        a followed by Enter for moving left,
-        d followed by Enter for moving right,
-        w followed by Enter for clockwise,
-        s followed by Enter for anticlockwise
-        and just Enter for staying in same column.
-        You will get 1 seconds to think. Press any key when you
-        are ready to start
-        """
-    raw_input(prompt)
+    if l == '':
+        level = 1
+    else:
+        level = int(l)
+
     if h == '':
         h = 30
     else:
@@ -173,17 +188,35 @@ if __name__ == '__main__':
         w = 40
     else:
         w = int(w)
+    prompt = """
+        Enter
+        a followed by Enter for moving left,
+        d followed by Enter for moving right,
+        w followed by Enter for clockwise,
+        s followed by Enter for anticlockwise
+        and just Enter for staying in same column.
+        Press any key when you
+        are ready to start
+        """
+    raw_input(prompt)
+
     board = Board(h, w)
     block = TBlock(height=randint(2, 4), width=randint(2, 4))
     place_on_top(board, block)
     print board
-    x = timed_input(1)
+    x = timed_input(2.0/level)
     while x != 'EOF':
         try:
             move_down(board, block)
         except:
             block = TBlock(height=randint(2, 4), width=randint(2, 4))
-            place_on_top(board, block)
+            try:
+                place_on_top(board, block)
+            except:
+                print "GAME OVER"
+                print "You scored %s/10000" % int(
+                    board.filled_percentage * 100)
+                break
         if x is not None:
             if x == 'a':
                 move_left(board, block)
@@ -194,4 +227,4 @@ if __name__ == '__main__':
             elif x == 's':
                 rotate_counter_clockwise(board, block)
         print board
-        x = timed_input(1)
+        x = timed_input(2.0/level)
